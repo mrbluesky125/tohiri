@@ -1,0 +1,11 @@
+{
+    "displayName"               : "TOHIRI",
+    "wallpaper"                 : "tohiri-ambience.jpg",
+    "highlightColor"            : "#FF0080",
+    "secondaryHighlightColor"   : "#FF008099",
+    "primaryColor"              : "#FFFFFF",
+    "secondaryColor"            : "#FFFFFF99",
+    "ringerVolume"              : 100,
+    "favorite"			: true
+}
+
