@@ -16,7 +16,7 @@ BuildRequires:  qt5-qttools
 BuildRequires:  qt5-qmake
 
 Requires:   ambienced
-Requires:   harbour-tohiri
+Requires:   harbour-tohiri >= 0.5.0
 
 %description
 Ambience for Tohiri OtherHalf
