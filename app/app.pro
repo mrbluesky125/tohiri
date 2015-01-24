@@ -21,7 +21,6 @@ HEADERS += src/tohir.h \
 OTHER_FILES += qml/tohiri.qml \
     qml/cover/CoverPage.qml \
     qml/pages/Tohiri.qml \
-    rpm/harbour-tohiri.spec \
     qml/pages/aboutPage.qml \
     qml/pages/SettingsDialog.qml \
     harbour-tohiri.desktop \
