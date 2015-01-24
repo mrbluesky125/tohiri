@@ -1,9 +1,9 @@
 #
-# TOHIRI spec File
-# (C) kimmoli 2014
+# TOHIRI spec file
+# (C) kimmoli 2014-2015
 # 
 
-Name:       harbour-tohiri
+Name:       harbour-ambience-tohiri
 
 %{!?qtc_qmake:%define qtc_qmake %qmake}
 %{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
@@ -15,7 +15,7 @@ Version:    0.4.devel
 Release:    4
 Group:      Qt/Qt
 License:    LICENSE
-URL:        https://github.com/kimmoli/tohiri-app
+URL:        https://github.com/kimmoli/tohiri
 Source0:    %{name}-%{version}.tar.bz2
 
 Requires:   sailfishsilica-qt5 >= 0.10.9
@@ -26,6 +26,10 @@ BuildRequires:  pkgconfig(Qt5Quick)
 BuildRequires:  pkgconfig(Qt5Multimedia)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  desktop-file-utils
+
+Requires:   ambienced
+
+Obsoletes:  harbour-tohiri
 
 %description
 Thermal Imaging application to be used with TOHIRI OtherHalf
@@ -52,6 +56,11 @@ desktop-file-install --delete-original       \
 %attr(755,root,root) %{_bindir}
 %{_datadir}/icons/hicolor/86x86/apps/
 %{_datadir}/applications/
-%{_datadir}/%{name}/
-%{_datadir}/%{name}/qml
+%{_datadir}/harbour-tohiri/
+%{_datadir}/harbour-tohiri/qml
+%{_datadir}/ambience/%{name}/
+%{_datadir}/ambience/%{name}/images/
 
+%post
+
+%_ambience_post
