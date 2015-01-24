@@ -1,21 +1,14 @@
 TEMPLATE = aux
 
-NAME=harbour-tohiri-ambience
+NAME = harbour-ambience-tohiri
 
-OTHER_FILES = \
-        harbour-tohiri.ambience \
-        images/* \
-        rpm/*
+OTHER_FILES = $${NAME}.ambience images/$${NAME}.jpg
 
-ambience.files = \
-        harbour-tohiri.ambience
-        
+ambience.files = $${NAME}.ambience
 ambience.path = /usr/share/ambience/$${NAME}
 
-images.files = images/*
+images.files = images/$${NAME}.jpg
 images.path = $${ambience.path}/images
 
-INSTALLS += \
-        ambience \
-        images
+INSTALLS += ambience images
 
