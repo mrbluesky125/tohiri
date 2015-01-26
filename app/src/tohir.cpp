@@ -221,7 +221,7 @@ int TohIR::readHotSpot()
 }
 
 /* Call dbus method to save screencapture */
-void TohIR::saveScreenCapture()
+QString TohIR::saveScreenCapture()
 {
     QDate ssDate = QDate::currentDate();
     QTime ssTime = QTime::currentTime();
@@ -247,9 +247,15 @@ void TohIR::saveScreenCapture()
     m.setArguments(args);
 
     if (QDBusConnection::sessionBus().send(m))
+    {
         printf("Screenshot success to %s\n", qPrintable(ssFilename));
+        return ssFilename;
+    }
     else
+    {
         printf("Screenshot failed\n");
+        return QString("Failed");
+    }
 }
 
 

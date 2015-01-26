@@ -25,7 +25,7 @@ public:
 
     QList<QString> readTemperatures();
     Q_INVOKABLE void startScan();
-    Q_INVOKABLE void saveScreenCapture();
+    Q_INVOKABLE QString saveScreenCapture();
 
     QString readVersion();
     QString readMinTemp();

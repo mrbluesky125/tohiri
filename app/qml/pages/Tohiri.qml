@@ -24,6 +24,10 @@ Page
         }
     }
 
+    Messagebox
+    {
+        id: messagebox
+    }
 
     SilicaFlickable
     {
@@ -259,7 +263,7 @@ Page
             running: false
             onTriggered:
             {
-                tohir.saveScreenCapture()
+                messagebox.showMessage("Image saved: " + tohir.saveScreenCapture(), 4000)
             }
         }
 

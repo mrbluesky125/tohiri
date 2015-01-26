@@ -24,5 +24,6 @@ OTHER_FILES += qml/tohiri.qml \
     qml/pages/aboutPage.qml \
     qml/pages/SettingsDialog.qml \
     harbour-tohiri.desktop \
-    harbour-tohiri.png
+    harbour-tohiri.png \
+    qml/pages/Messagebox.qml
 
