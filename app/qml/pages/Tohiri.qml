@@ -8,6 +8,23 @@ Page
 {
     id: page
 
+    property bool appActive: applicationActive
+
+    onAppActiveChanged:
+    {
+        if (!appActive)
+        {
+            console.log("stopping camera")
+            camera.stop()
+        }
+        else if (camera.cameraStatus === 4) // LoadedStatus
+        {
+            console.log("starting camera")
+            camera.start()
+        }
+    }
+
+
     SilicaFlickable
     {
         anchors.fill: parent
@@ -318,7 +335,6 @@ Page
             currentDateTime.text = Qt.formatDateTime(new Date(), "hh:mm:ss - dd.MM.yyyy")
         }
     }
-
 
 }
 
