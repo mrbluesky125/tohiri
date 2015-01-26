@@ -50,7 +50,7 @@ void TohIR::readSettings()
 
 void TohIR::saveSettings()
 {
-    QSettings s("harbour-tohirii", "harbour-tohiri");
+    QSettings s("harbour-tohiri", "harbour-tohiri");
 
     s.beginGroup("View");
     s.setValue("gradientOpacity", QString::number(m_gradientOpacity,'f',2) );
