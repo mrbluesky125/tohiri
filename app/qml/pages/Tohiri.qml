@@ -104,6 +104,8 @@ Page
             anchors.centerIn: parent
         }
 
+
+
         Canvas
         {
             id: grad
@@ -232,7 +234,7 @@ Page
             Label
             {
                 width: page.width/3
-                text: tohir.minTemp
+                text: tohir.minTemp.toFixed(1) + " ºC"
                 color: Theme.primaryColor
                 font.pixelSize: Theme.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
@@ -240,7 +242,7 @@ Page
             Label
             {
                 width: page.width/3
-                text: tohir.avgTemp
+                text: tohir.avgTemp.toFixed(1) + " ºC"
                 color: Theme.primaryColor
                 font.pixelSize: Theme.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
@@ -248,7 +250,7 @@ Page
             Label
             {
                 width: page.width/3
-                text: tohir.maxTemp
+                text: tohir.maxTemp.toFixed(1) + " ºC"
                 color: Theme.primaryColor
                 font.pixelSize: Theme.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
@@ -284,7 +286,7 @@ Page
             id: thermistorTemperature
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: mamBackground.bottom
-            text: "---"
+            text: (tohir.thermistor < -200) ? "---" : tohir.thermistor.toFixed(1) + " ºC"
         }
         Label
         {
@@ -335,7 +337,7 @@ Page
         running: applicationActive && page.status === PageStatus.Active
         onTriggered:
         {
-            thermistorTemperature.text = tohir.readThermistor()
+            tohir.readThermistor()
             currentDateTime.text = Qt.formatDateTime(new Date(), "hh:mm:ss - dd.MM.yyyy")
         }
     }

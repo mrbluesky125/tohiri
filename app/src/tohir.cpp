@@ -20,6 +20,7 @@ TohIR::TohIR(QObject *parent) : QAbstractListModel(parent)
     m_min = 100.0;
     m_max = -20.0;
     m_avg = 0.0;
+    m_thermistor = -273.0;
     m_hotSpot = 31;
 
     readSettings();
@@ -96,7 +97,7 @@ QHash<int, QByteArray> TohIR::roleNames() const
 }
 
 /* Return git describe as string (see .pro file) */
-QString TohIR::readVersion()
+QString TohIR::readVersion() const
 {
     return QString(APPVERSION);
 }
@@ -152,12 +153,6 @@ void TohIR::writeContrast(qreal val)
 }
 
 
-/* Return thermistor temperature */
-QString TohIR::readThermistor()
-{
-    return QString("%1 °C").arg(QString::number(amg->getThermistor(), 'g', 3));
-}
-
 /* Start IR Scan function, emit changed after completed */
 void TohIR::startScan()
 {
@@ -181,13 +176,19 @@ void TohIR::startScan()
 
     /* Get RGB values for each pixel */
     m_temperatures.clear();
-
     for(int i=0 ; i<64 ; i++)
         m_temperatures.append(temperatureColor(m_rawTemperatures.at(i), m_min, m_max, m_avg));
 
     emit scanFinished();
 
     emit dataChanged(index(0), index(rowCount(QModelIndex())-1));
+}
+
+/* Return thermistor temperature */
+void TohIR::readThermistor()
+{
+    m_thermistor = amg->getThermistor();
+    emit thermistorChanged(m_thermistor);
 }
 
 /* Return temperature color gradients as array */
@@ -210,6 +211,11 @@ qreal TohIR::readAvgTemp() const
 qreal TohIR::readMaxTemp() const
 {
     return m_max;
+}
+
+qreal TohIR::thermistor() const
+{
+    return m_thermistor;
 }
 
 int TohIR::readHotSpot()

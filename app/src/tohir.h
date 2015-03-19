@@ -21,13 +21,13 @@ private:
     Q_PROPERTY(qreal minTemp READ readMinTemp NOTIFY scanFinished)
     Q_PROPERTY(qreal avgTemp READ readAvgTemp NOTIFY scanFinished)
     Q_PROPERTY(qreal maxTemp READ readMaxTemp NOTIFY scanFinished)
+    Q_PROPERTY(qreal thermistor READ thermistor NOTIFY thermistorChanged)
     Q_PROPERTY(int hotSpot READ readHotSpot NOTIFY scanFinished)
 
     Q_PROPERTY(qreal gradientOpacity READ readGradientOpacity WRITE writeGradientOpacity NOTIFY gradientOpacityChanged)
     Q_PROPERTY(int updateRate READ readUpdateRate WRITE writeUpdateRate NOTIFY updateRateChanged)
     Q_PROPERTY(qreal granularity READ readGranularity WRITE writeGranularity NOTIFY granularityChanged)
     Q_PROPERTY(qreal contrast READ readContrast WRITE writeContrast NOTIFY contrastChanged)
-
 
 public:
     explicit TohIR(QObject *parent = 0);
@@ -39,12 +39,14 @@ public:
 
     QList<QString> readTemperatures() const;
     Q_INVOKABLE void startScan();
+    Q_INVOKABLE void readThermistor();
     Q_INVOKABLE QString saveScreenCapture();
 
     QString readVersion();
     qreal readMinTemp() const;
     qreal readAvgTemp() const;
     qreal readMaxTemp() const;
+    qreal thermistor() const;
     int readHotSpot();
 
     qreal readGradientOpacity();
@@ -62,10 +64,9 @@ public:
     Q_INVOKABLE void readSettings();
     Q_INVOKABLE void saveSettings();
 
-    Q_INVOKABLE QString readThermistor();
-
 signals:
     void scanFinished();
+    void thermistorChanged(qreal);
     void versionChanged();
 
     void gradientOpacityChanged();
@@ -84,6 +85,7 @@ private:
     qreal m_avg;
     qreal m_min;
     qreal m_max;
+    qreal m_thermistor;
     int m_hotSpot;
 
     qreal m_gradientOpacity;
