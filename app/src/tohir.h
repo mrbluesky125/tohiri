@@ -1,11 +1,21 @@
 #ifndef TOHIR_H
 #define TOHIR_H
-#include <QObject>
+#include <QtCore>
 #include "amg883x.h"
 
-class TohIR : public QObject
+class TohIR : public QAbstractListModel
 {
     Q_OBJECT
+
+public:
+    enum ItemDataRole {
+        TemperatureRole = Qt::UserRole +1,
+        ColorRole,
+        HotSpotRole
+    };
+
+private:
+    Q_ENUMS(ItemDataRole)
     Q_PROPERTY(QList<QString> temperatures READ readTemperatures NOTIFY scanFinished)
     Q_PROPERTY(QString version READ readVersion NOTIFY versionChanged)
     Q_PROPERTY(QString minTemp READ readMinTemp NOTIFY scanFinished)
@@ -21,9 +31,13 @@ class TohIR : public QObject
 
 public:
     explicit TohIR(QObject *parent = 0);
-    ~TohIR();
+    virtual ~TohIR();
 
-    QList<QString> readTemperatures();
+    int rowCount(const QModelIndex &parent) const;
+    QVariant data(const QModelIndex &index, int role) const;
+    QHash<int, QByteArray> roleNames() const;
+
+    QList<QString> readTemperatures() const;
     Q_INVOKABLE void startScan();
     Q_INVOKABLE QString saveScreenCapture();
 
@@ -60,12 +74,11 @@ signals:
     void contrastChanged();
 
 private:
-
     void controlVdd(bool state);
 
-    int randInt(int low, int high);
-    QString temperatureColor(qreal temp, qreal min, qreal max, qreal avg);
+    QString temperatureColor(qreal temp, qreal min, qreal max, qreal avg) const;
 
+    QList<qreal> m_rawTemperatures;
     QList<QString> m_temperatures;
 
     qreal m_avg;
@@ -79,7 +92,6 @@ private:
     qreal m_contrast;
 
     amg883x* amg;
-
 };
 
 

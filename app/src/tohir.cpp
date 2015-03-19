@@ -8,8 +8,7 @@
 #include "amg883x.h"
 
 
-TohIR::TohIR(QObject *parent) :
-    QObject(parent)
+TohIR::TohIR(QObject *parent) : QAbstractListModel(parent)
 {
 
     // Create seed for the random
@@ -61,10 +60,38 @@ TohIR::~TohIR()
     controlVdd(false);
 }
 
-int TohIR::randInt(int low, int high)
+int TohIR::rowCount(const QModelIndex &parent) const
 {
-    // Random number between low and high
-    return qrand() % ((high + 1) - low) + low;
+    Q_UNUSED(parent)
+    return 64; //8x8 sensor size
+}
+
+QVariant TohIR::data(const QModelIndex &index, int role) const
+{
+    if(index.row() >= m_rawTemperatures.size())
+        return QVariant();
+
+    const qreal temperature = m_rawTemperatures.value(index.row());
+    if(role == int(TemperatureRole)) {
+        return QVariant::fromValue(temperature);
+    }
+    else if(role == int(ColorRole)) {
+        return QVariant::fromValue(temperatureColor(temperature, m_min, m_max, m_avg));
+    }
+    else if(role == int(HotSpotRole)) {
+        return QVariant::fromValue(qFuzzyCompare(temperature, m_max));
+    }
+    else
+        return QVariant();
+}
+
+QHash<int, QByteArray> TohIR::roleNames() const
+{
+    QHash<int, QByteArray> roleNames;
+    roleNames[TemperatureRole] = "temperature";
+    roleNames[ColorRole] = "color";
+    roleNames[HotSpotRole] = "hotspot";
+    return roleNames;
 }
 
 /* Return git describe as string (see .pro file) */
@@ -133,43 +160,20 @@ QString TohIR::readThermistor()
 /* Start IR Scan function, emit changed after completed */
 void TohIR::startScan()
 {
-
-//    printf("Thermistor %0.5f\n", amg->getThermistor());
-
-    QList<qreal> res = amg->getTemperatureArray();
-
-    int i;
-    qreal thisMax = -40.0;
-
+    m_rawTemperatures = amg->getTemperatureArray();
     m_min = 200.0;
     m_max = -40.0;
-
     m_avg = 0.0;
-
-//     for (i=0 ; i < 64 ; i++)
-//        printf("%0.2f%s", res.at(i), (( i%8 == 0 ) ? "\n" : " ") );
 
     /* Return color gradient array */
 
-    for (i=0 ; i<64 ; i++)
+    for(int i=0 ; i<64 ; i++)
     {
         /* Just use whole numbers */
-        qreal tmp = res.at(i);
-
-        if (tmp > thisMax)
-        {
-            thisMax = tmp;
-            m_hotSpot = i;
-        }
-
-        if (tmp > m_max)
-            m_max = tmp;
-
-        if (tmp < m_min)
-            m_min = tmp;
-
+        const qreal tmp = m_rawTemperatures.at(i);
+        m_max = qMax(m_max, tmp);
+        m_min = qMin(m_min, tmp);
         m_avg = m_avg + tmp;
-
     }
 
     m_avg = m_avg/64;
@@ -177,14 +181,16 @@ void TohIR::startScan()
     /* Get RGB values for each pixel */
     m_temperatures.clear();
 
-    for (i=0 ; i<64 ; i++)
-        m_temperatures.append(temperatureColor(res.at(i), m_min, m_max, m_avg));
+    for(int i=0 ; i<64 ; i++)
+        m_temperatures.append(temperatureColor(m_rawTemperatures.at(i), m_min, m_max, m_avg));
 
     emit scanFinished();
+
+    emit dataChanged(index(0), index(rowCount(QModelIndex())-1));
 }
 
 /* Return temperature color gradients as array */
-QList<QString> TohIR::readTemperatures()
+QList<QString> TohIR::readTemperatures() const
 {
     return m_temperatures;
 }
@@ -249,7 +255,7 @@ QString TohIR::saveScreenCapture()
 }
 
 
-QString TohIR::temperatureColor(qreal temp, qreal min, qreal max, qreal avg)
+QString TohIR::temperatureColor(qreal temp, qreal min, qreal max, qreal avg) const
 {
     /* We have 61 different colors - for now */
     static const QString lookup[61] =
