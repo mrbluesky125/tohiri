@@ -197,19 +197,19 @@ QList<QString> TohIR::readTemperatures() const
 }
 
 /* Return minimum, average and maximum temperature of last scan */
-QString TohIR::readMinTemp()
+qreal TohIR::readMinTemp() const
 {
-    return QString("%1 °C").arg(QString::number(m_min, 'g', 3));
+    return m_min;
 }
 
-QString TohIR::readAvgTemp()
+qreal TohIR::readAvgTemp() const
 {
-    return QString("%1 °C").arg(QString::number(m_avg, 'g', 3));
+    return m_avg;
 }
 
-QString TohIR::readMaxTemp()
+qreal TohIR::readMaxTemp() const
 {
-    return QString("%1 °C").arg(QString::number(m_max, 'g', 3));
+    return m_max;
 }
 
 int TohIR::readHotSpot()

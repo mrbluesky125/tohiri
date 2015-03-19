@@ -18,15 +18,15 @@ private:
     Q_ENUMS(ItemDataRole)
     Q_PROPERTY(QList<QString> temperatures READ readTemperatures NOTIFY scanFinished)
     Q_PROPERTY(QString version READ readVersion NOTIFY versionChanged)
-    Q_PROPERTY(QString minTemp READ readMinTemp NOTIFY scanFinished)
-    Q_PROPERTY(QString avgTemp READ readAvgTemp NOTIFY scanFinished)
-    Q_PROPERTY(QString maxTemp READ readMaxTemp NOTIFY scanFinished)
+    Q_PROPERTY(qreal minTemp READ readMinTemp NOTIFY scanFinished)
+    Q_PROPERTY(qreal avgTemp READ readAvgTemp NOTIFY scanFinished)
+    Q_PROPERTY(qreal maxTemp READ readMaxTemp NOTIFY scanFinished)
     Q_PROPERTY(int hotSpot READ readHotSpot NOTIFY scanFinished)
 
-    Q_PROPERTY(qreal gradientOpacity READ readGradientOpacity WRITE writeGradientOpacity(qreal) NOTIFY gradientOpacityChanged())
-    Q_PROPERTY(int updateRate READ readUpdateRate WRITE writeUpdateRate() NOTIFY updateRateChanged())
-    Q_PROPERTY(qreal granularity READ readGranularity WRITE writeGranularity() NOTIFY granularityChanged())
-    Q_PROPERTY(qreal contrast READ readContrast WRITE writeContrast() NOTIFY contrastChanged())
+    Q_PROPERTY(qreal gradientOpacity READ readGradientOpacity WRITE writeGradientOpacity NOTIFY gradientOpacityChanged)
+    Q_PROPERTY(int updateRate READ readUpdateRate WRITE writeUpdateRate NOTIFY updateRateChanged)
+    Q_PROPERTY(qreal granularity READ readGranularity WRITE writeGranularity NOTIFY granularityChanged)
+    Q_PROPERTY(qreal contrast READ readContrast WRITE writeContrast NOTIFY contrastChanged)
 
 
 public:
@@ -42,9 +42,9 @@ public:
     Q_INVOKABLE QString saveScreenCapture();
 
     QString readVersion();
-    QString readMinTemp();
-    QString readAvgTemp();
-    QString readMaxTemp();
+    qreal readMinTemp() const;
+    qreal readAvgTemp() const;
+    qreal readMaxTemp() const;
     int readHotSpot();
 
     qreal readGradientOpacity();
