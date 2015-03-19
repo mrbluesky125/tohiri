@@ -42,7 +42,7 @@ public:
     Q_INVOKABLE void readThermistor();
     Q_INVOKABLE QString saveScreenCapture();
 
-    QString readVersion();
+    QString readVersion() const;
     qreal readMinTemp() const;
     qreal readAvgTemp() const;
     qreal readMaxTemp() const;

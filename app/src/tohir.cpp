@@ -162,7 +162,6 @@ void TohIR::startScan()
     m_avg = 0.0;
 
     /* Return color gradient array */
-
     for(int i=0 ; i<64 ; i++)
     {
         /* Just use whole numbers */
@@ -226,37 +225,20 @@ int TohIR::readHotSpot()
 /* Call dbus method to save screencapture */
 QString TohIR::saveScreenCapture()
 {
-    QDate ssDate = QDate::currentDate();
-    QTime ssTime = QTime::currentTime();
-
-    QString ssFilename = QString("%8/tohiri-%1%2%3-%4%5%6-%7.png")
-                    .arg((int) ssDate.day(),    2, 10, QLatin1Char('0'))
-                    .arg((int) ssDate.month(),  2, 10, QLatin1Char('0'))
-                    .arg((int) ssDate.year(),   2, 10, QLatin1Char('0'))
-                    .arg((int) ssTime.hour(),   2, 10, QLatin1Char('0'))
-                    .arg((int) ssTime.minute(), 2, 10, QLatin1Char('0'))
-                    .arg((int) ssTime.second(), 2, 10, QLatin1Char('0'))
-                    .arg((int) ssTime.msec(),   3, 10, QLatin1Char('0'))
-                    .arg(QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
-
-
+    QString ssFilename = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation)
+            + QDateTime::currentDateTime().toString("ddMMyy-hhmmss-zzz.png");
     QDBusMessage m = QDBusMessage::createMethodCall("org.nemomobile.lipstick",
                                                     "/org/nemomobile/lipstick/screenshot",
                                                     "",
                                                     "saveScreenshot" );
 
-    QList<QVariant> args;
-    args.append(ssFilename);
-    m.setArguments(args);
-
-    if (QDBusConnection::sessionBus().send(m))
-    {
-        printf("Screenshot success to %s\n", qPrintable(ssFilename));
+    m.setArguments(QList<QVariant>() << ssFilename);
+    if (QDBusConnection::sessionBus().send(m)) {
+        qDebug() << "Screenshot success to" << ssFilename;
         return ssFilename;
     }
-    else
-    {
-        printf("Screenshot failed\n");
+    else {
+        qDebug() << "Screenshot failed";
         return QString("Failed");
     }
 }
