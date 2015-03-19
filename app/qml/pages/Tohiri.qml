@@ -2,6 +2,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import harbour.tohiri.TohIR 1.0
 import QtMultimedia 5.0
+import QtGraphicalEffects 1.0
 import "."
 
 Page
@@ -127,10 +128,9 @@ Page
                 {
                     ctx.beginPath()
                     ctx.lineWidth = 1.0
-                    ctx.strokeStyle = temps[i]
                     ctx.fillStyle = temps[i]
-                    ctx.fillRect(x, y, granu, granu)
-                    ctx.stroke()
+                    ctx.rect(x, y, granu, granu)
+                    ctx.fill()
 
                     x = x + granu
                     if (x >= width)

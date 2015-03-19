@@ -6,12 +6,12 @@
 class TohIR : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QList<QString> temperatures READ readTemperatures NOTIFY temperaturesChanged())
-    Q_PROPERTY(QString version READ readVersion NOTIFY versionChanged())
-    Q_PROPERTY(QString minTemp READ readMinTemp NOTIFY minTempChanged())
-    Q_PROPERTY(QString avgTemp READ readAvgTemp NOTIFY avgTempChanged())
-    Q_PROPERTY(QString maxTemp READ readMaxTemp NOTIFY maxTempChanged())
-    Q_PROPERTY(int hotSpot READ readHotSpot NOTIFY hotSpotChanged())
+    Q_PROPERTY(QList<QString> temperatures READ readTemperatures NOTIFY scanFinished)
+    Q_PROPERTY(QString version READ readVersion NOTIFY versionChanged)
+    Q_PROPERTY(QString minTemp READ readMinTemp NOTIFY scanFinished)
+    Q_PROPERTY(QString avgTemp READ readAvgTemp NOTIFY scanFinished)
+    Q_PROPERTY(QString maxTemp READ readMaxTemp NOTIFY scanFinished)
+    Q_PROPERTY(int hotSpot READ readHotSpot NOTIFY scanFinished)
 
     Q_PROPERTY(qreal gradientOpacity READ readGradientOpacity WRITE writeGradientOpacity(qreal) NOTIFY gradientOpacityChanged())
     Q_PROPERTY(int updateRate READ readUpdateRate WRITE writeUpdateRate() NOTIFY updateRateChanged())
@@ -51,12 +51,8 @@ public:
     Q_INVOKABLE QString readThermistor();
 
 signals:
-    void temperaturesChanged();
+    void scanFinished();
     void versionChanged();
-    void minTempChanged();
-    void avgTempChanged();
-    void maxTempChanged();
-    void hotSpotChanged();
 
     void gradientOpacityChanged();
     void updateRateChanged();

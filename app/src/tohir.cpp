@@ -36,16 +36,11 @@ void TohIR::readSettings()
     QSettings s("harbour-tohiri", "harbour-tohiri");
 
     s.beginGroup("View");
-    m_gradientOpacity = s.value("gradientOpacity", "0.5").toReal();
-    m_updateRate = s.value("updateRate", 500).toInt();
-    m_granularity = s.value("granularity", "2.0").toReal();
-    m_contrast = s.value("contrast", 1.0).toReal();
+    writeGradientOpacity(s.value("gradientOpacity", "0.5").toReal());
+    writeUpdateRate(s.value("updateRate", 500).toInt());
+    writeGranularity(s.value("granularity", "2.0").toReal());
+    writeContrast(s.value("contrast", 1.0).toReal());
     s.endGroup();
-
-    emit gradientOpacityChanged();
-    emit updateRateChanged();
-    emit granularityChanged();
-    emit contrastChanged();
 }
 
 void TohIR::saveSettings()
@@ -177,12 +172,7 @@ void TohIR::startScan()
 
     }
 
-    emit maxTempChanged();
-    emit minTempChanged();
-    emit hotSpotChanged();
-
     m_avg = m_avg/64;
-    emit avgTempChanged();
 
     /* Get RGB values for each pixel */
     m_temperatures.clear();
@@ -190,7 +180,7 @@ void TohIR::startScan()
     for (i=0 ; i<64 ; i++)
         m_temperatures.append(temperatureColor(res.at(i), m_min, m_max, m_avg));
 
-    emit temperaturesChanged();
+    emit scanFinished();
 }
 
 /* Return temperature color gradients as array */
