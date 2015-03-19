@@ -47,7 +47,7 @@ public:
     void init();
 
     qreal getThermistor();
-    QList<qreal> getTemperatureArray();
+    QVector<qreal> getTemperatureArray();
 
 
 

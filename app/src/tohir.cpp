@@ -9,6 +9,7 @@
 
 
 TohIR::TohIR(QObject *parent) : QAbstractListModel(parent)
+  ,m_rawTemperatures(64, 0.0)
 {
 
     // Create seed for the random

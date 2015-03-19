@@ -74,9 +74,9 @@ qreal amg883x::getThermistor()
     return temp;
 }
 
-QList<qreal> amg883x::getTemperatureArray()
+QVector<qreal> amg883x::getTemperatureArray()
 {
-    QList<qreal> temp;
+    QVector<qreal> temp;
     int i;
 
     QByteArray res = writeThenRead(amgAddress, amgTemperatureRegister, 128);

@@ -78,7 +78,7 @@ private:
 
     QString temperatureColor(qreal temp, qreal min, qreal max, qreal avg) const;
 
-    QList<qreal> m_rawTemperatures;
+    QVector<qreal> m_rawTemperatures;
     QList<QString> m_temperatures;
 
     qreal m_avg;
