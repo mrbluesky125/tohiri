@@ -124,8 +124,6 @@ Page
 
                     //smooth animation between colors - possibly causing higher cpu load
                     Behavior on color { ColorAnimation { duration: tohir.updateRate*0.75 } }
-
-                    //TODO: Labels / Touch / etc.
                 }
             }
 
@@ -135,6 +133,45 @@ Page
                 source: irView
                 radius: Math.min(irView.tileHeight, irView.tileWidth)*tohir.granularity
                 samples: 32
+            }
+        }
+
+        Grid {
+            id: irOverlay
+
+            anchors.fill: videoPreview
+            height: 640
+            width: 480
+            columns: 8
+            rows: 8
+            opacity: tohir.gradientOpacity
+
+            property int tileHeight: irView.height/irView.rows
+            property int tileWidth: irView.width/irView.columns
+            property int selectedTile: -1
+
+            Repeater {
+                model: tohir
+                delegate: Item {
+                    height: irView.tileHeight
+                    width: irView.tileWidth
+
+                    Label {
+                        anchors.centerIn: parent
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        visible: irOverlay.selectedTile === index
+                        text: temperatureRole.toFixed(1) + " ºC"
+                        style: Text.Outline
+                        styleColor: "black"
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: irOverlay.selectedTile = index
+                    }
+                }
             }
         }
 
@@ -225,20 +262,23 @@ Page
             }
         }
 
-        Label
+        Row
         {
-            id: thermistorTemperature
-            anchors.horizontalCenter: parent.horizontalCenter
+            id: thermistorDateRow
+            spacing: Theme.paddingLarge
             anchors.top: mamBackground.bottom
-            text: (tohir.thermistor < -200) ? "---" : tohir.thermistor.toFixed(1) + " ºC"
-        }
-        Label
-        {
-            id: currentDateTime
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: thermistorTemperature.bottom
-            anchors.topMargin: 10
-            text: "---"
+
+            Label
+            {
+                id: thermistorTemperature
+                text: (tohir.thermistor < -200) ? "---" : tohir.thermistor.toFixed(1) + " ºC"
+            }
+            Label
+            {
+                id: currentDateTime
+                text: "---"
+            }
         }
     }
 

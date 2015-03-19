@@ -89,6 +89,11 @@ QHash<int, QByteArray> TohIR::roleNames() const
     return roleNames;
 }
 
+QVariant TohIR::getData(int row, int role) const
+{
+    return data(index(row), role);
+}
+
 /* Return git describe as string (see .pro file) */
 QString TohIR::readVersion() const
 {

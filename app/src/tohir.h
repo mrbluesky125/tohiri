@@ -35,6 +35,7 @@ public:
     int rowCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
     QHash<int, QByteArray> roleNames() const;
+    Q_INVOKABLE QVariant getData(int row, int role) const;
 
     QList<QString> readTemperatures() const;
     Q_INVOKABLE void startScan();
