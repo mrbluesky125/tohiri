@@ -22,7 +22,6 @@ private:
     Q_PROPERTY(qreal avgTemp READ readAvgTemp NOTIFY scanFinished)
     Q_PROPERTY(qreal maxTemp READ readMaxTemp NOTIFY scanFinished)
     Q_PROPERTY(qreal thermistor READ thermistor NOTIFY thermistorChanged)
-    Q_PROPERTY(int hotSpot READ readHotSpot NOTIFY scanFinished)
 
     Q_PROPERTY(qreal gradientOpacity READ readGradientOpacity WRITE writeGradientOpacity NOTIFY gradientOpacityChanged)
     Q_PROPERTY(int updateRate READ readUpdateRate WRITE writeUpdateRate NOTIFY updateRateChanged)
@@ -47,7 +46,6 @@ public:
     qreal readAvgTemp() const;
     qreal readMaxTemp() const;
     qreal thermistor() const;
-    int readHotSpot();
 
     qreal readGradientOpacity();
     void writeGradientOpacity(qreal val);
@@ -86,7 +84,6 @@ private:
     qreal m_min;
     qreal m_max;
     qreal m_thermistor;
-    int m_hotSpot;
 
     qreal m_gradientOpacity;
     int m_updateRate;

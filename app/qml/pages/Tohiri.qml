@@ -10,6 +10,7 @@ Page
     id: page
 
     property bool appActive: applicationActive
+    property bool pageActive: page.status === PageStatus.Active
 
     onAppActiveChanged:
     {
@@ -34,28 +35,24 @@ Page
     {
         anchors.fill: parent
 
-        PullDownMenu
-        {
+        PullDownMenu {
             id: pdm
-
             visible: !saveTimer.running
 
-            MenuItem
-            {
+            MenuItem {
                 text: "About"
                 onClicked: pageStack.push(Qt.resolvedUrl("aboutPage.qml"),
                                           { "version": tohir.version } )
             }
-            MenuItem
-            {
+            MenuItem {
                 text: "Settings"
                 onClicked:
                 {
                     var dialog = pageStack.push(Qt.resolvedUrl("SettingsDialog.qml"),
-                                          { "gradientOpacity": tohir.gradientOpacity,
-                                            "updateRate": tohir.updateRate,
-                                            "granularity": tohir.granularity,
-                                            "contrast": tohir.contrast } )
+                                                { "gradientOpacity": tohir.gradientOpacity,
+                                                    "updateRate": tohir.updateRate,
+                                                    "granularity": tohir.granularity,
+                                                    "contrast": tohir.contrast } )
                     dialog.accepted.connect( function()
                     {
                         tohir.gradientOpacity = dialog.gradientOpacity
@@ -70,8 +67,7 @@ Page
             MenuItem
             {
                 text: "Save image"
-                onClicked:
-                {
+                onClicked: {
                     saveTimer.start()
                 }
             }
@@ -83,8 +79,7 @@ Page
             flash.mode: Camera.FlashOff
             captureMode: Camera.CaptureStillImage
             focus.focusMode: Camera.FocusContinuous
-            onError:
-            {
+            onError: {
                 console.error("error: " + camera.errorString);
             }
         }
@@ -96,89 +91,51 @@ Page
             title: "TOH Infrared Imager"
         }
 
+
+
         VideoOutput
         {
             id: videoPreview
             source: camera
             width: 480
             anchors.centerIn: parent
-        }
-
-
-
-        Canvas
-        {
-            id: grad
-
-            width: (8 * tohir.granularity).toFixed(0)
-            height: (8 * tohir.granularity).toFixed(0)
-
-            property real granu: (8 * tohir.granularity).toFixed(0)/8
-
-            anchors.centerIn: parent
-
-            onPaint:
-            {
-                var ctx = getContext('2d')
-
-                var temps = tohir.temperatures
-
-                var x = 0.0;
-                var y = 0.0;
-
-                for (var i=0; i<64 ; i++)
-                {
-                    ctx.beginPath()
-                    ctx.lineWidth = 1.0
-                    ctx.fillStyle = temps[i]
-                    ctx.rect(x, y, granu, granu)
-                    ctx.fill()
-
-                    x = x + granu
-                    if (x >= width)
-                    {
-                        x = 0.0
-                        y = y + granu
-                    }
-                }
-            }
-        }
-
-        ShaderEffect
-        {
-            id: shader
-
-            anchors.centerIn: parent
             anchors.verticalCenterOffset: -60
+        }
+
+        Grid {
+            id: irView
+
+            anchors.fill: videoPreview
             height: 640
             width: 480
+            columns: 8
+            rows: 8
+            opacity: tohir.gradientOpacity
 
-            property variant videoSource: ShaderEffectSource { sourceItem: videoPreview; hideSource: true }
-            property variant gradientSource: ShaderEffectSource { sourceItem: grad; hideSource: true }
+            property int tileHeight: irView.height/irView.rows
+            property int tileWidth: irView.width/irView.columns
 
-            property real op : tohir.gradientOpacity
-            property real contrast : tohir.contrast
+            Repeater {
+                model: tohir
+                delegate: Rectangle {
+                    height: irView.tileHeight
+                    width: irView.tileWidth
+                    color: colorRole
 
-            smooth: false /* afaik this sets GL_NEAREST  (true sets GL_LINEAR) */
+                    //smooth animation between colors - possibly causing higher cpu load
+                    Behavior on color { ColorAnimation { duration: tohir.updateRate*0.75 } }
 
-            fragmentShader:
-                "
-                varying highp vec2 qt_TexCoord0;
-
-                uniform sampler2D videoSource;
-                uniform sampler2D gradientSource;
-                uniform highp float op;
-                uniform highp float contrast;
-
-                void main()
-                {
-                        highp vec4 gradient = texture2D(gradientSource, qt_TexCoord0);
-                        gradient.rgb /= gradient.a;
-                        gradient.rgb = (gradient.rgb - 0.5) * contrast + 0.5;
-                        gradient.rgb *= gradient.a;
-                        gl_FragColor = texture2D(videoSource, qt_TexCoord0) + op * (gradient - texture2D(videoSource, qt_TexCoord0));
+                    //TODO: Labels / Touch / etc.
                 }
-                "
+            }
+
+            layer.enabled: true
+            layer.effect: GaussianBlur {
+                cached: true
+                source: irView
+                radius: Math.min(irView.tileHeight, irView.tileWidth)*tohir.granularity
+                samples: 32
+            }
         }
 
         Rectangle
@@ -189,71 +146,71 @@ Page
             width: 480
             height: mamLabels.height + mamValues.height + 10
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: shader.bottom
-        }
+            anchors.top: irView.bottom
 
-        Row
-        {
-            id: mamLabels
-            z: 3
-            x: Theme.paddingLarge
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: mamBackground.top
+            Row
+            {
+                id: mamLabels
+                z: 3
+                x: Theme.paddingLarge
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: mamBackground.top
 
-            Label
-            {
-                width: page.width/3
-                text: "min"
-                color: Theme.secondaryColor
-                font.pixelSize: Theme.fontSizeSmall
-                horizontalAlignment: Text.AlignHCenter
+                Label
+                {
+                    width: page.width/3
+                    text: "min"
+                    color: Theme.secondaryColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                Label
+                {
+                    width: page.width/3
+                    text: "avg"
+                    color: Theme.secondaryColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                Label
+                {
+                    width: page.width/3
+                    text: "max"
+                    color: Theme.secondaryColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    horizontalAlignment: Text.AlignHCenter
+                }
             }
-            Label
+            Row
             {
-                width: page.width/3
-                text: "avg"
-                color: Theme.secondaryColor
-                font.pixelSize: Theme.fontSizeSmall
-                horizontalAlignment: Text.AlignHCenter
-            }
-            Label
-            {
-                width: page.width/3
-                text: "max"
-                color: Theme.secondaryColor
-                font.pixelSize: Theme.fontSizeSmall
-                horizontalAlignment: Text.AlignHCenter
-            }
-        }
-        Row
-        {
-            id: mamValues
-            z: 3
-            anchors.top: mamLabels.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            Label
-            {
-                width: page.width/3
-                text: tohir.minTemp.toFixed(1) + " ºC"
-                color: Theme.primaryColor
-                font.pixelSize: Theme.fontSizeSmall
-                horizontalAlignment: Text.AlignHCenter
-            }
-            Label
-            {
-                width: page.width/3
-                text: tohir.avgTemp.toFixed(1) + " ºC"
-                color: Theme.primaryColor
-                font.pixelSize: Theme.fontSizeSmall
-                horizontalAlignment: Text.AlignHCenter
-            }
-            Label
-            {
-                width: page.width/3
-                text: tohir.maxTemp.toFixed(1) + " ºC"
-                color: Theme.primaryColor
-                font.pixelSize: Theme.fontSizeSmall
-                horizontalAlignment: Text.AlignHCenter
+                id: mamValues
+                z: 3
+                anchors.top: mamLabels.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                Label
+                {
+                    width: page.width/3
+                    text: tohir.minTemp.toFixed(1) + " ºC"
+                    color: Theme.primaryColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                Label
+                {
+                    width: page.width/3
+                    text: tohir.avgTemp.toFixed(1) + " ºC"
+                    color: Theme.primaryColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                Label
+                {
+                    width: page.width/3
+                    text: tohir.maxTemp.toFixed(1) + " ºC"
+                    color: Theme.primaryColor
+                    font.pixelSize: Theme.fontSizeSmall
+                    horizontalAlignment: Text.AlignHCenter
+                }
             }
         }
 
@@ -263,24 +220,11 @@ Page
             interval: 500
             repeat: false
             running: false
-            onTriggered:
-            {
+            onTriggered: {
                 messagebox.showMessage("Image saved: " + tohir.saveScreenCapture(), 4000)
             }
         }
 
-        Timer
-        {
-            interval: tohir.updateRate
-            repeat: true
-            running: applicationActive && page.status === PageStatus.Active &&
-                     !pdm.active && !saveTimer.running
-            triggeredOnStart: true
-            onTriggered:
-            {
-                tohir.startScan()
-            }
-        }
         Label
         {
             id: thermistorTemperature
@@ -296,45 +240,29 @@ Page
             anchors.topMargin: 10
             text: "---"
         }
-
-        Rectangle
-        {
-            id: hotspotMarker
-            /*
-              Corner of videopreview is at 30,100  (-8)
-            */
-            x: 25
-            y: 95
-            width: 10
-            height: 10
-            rotation: 45
-            color: "white"
-        }
-
     }
 
-    TohIR
-    {
+    TohIR {
         id: tohir
 
-        onTemperaturesChanged:
-        {
-            var res = tohir.temperatures
-            var hotspot = tohir.hotSpot
+    }
 
-            grad.requestPaint()
-
-            hotspotMarker.x = 55 + ((60 * hotspot) % 480)
-            hotspotMarker.y = 135 + (80 * ((hotspot/8)|0))
+    Timer {
+        id: tohirTimer
+        interval: tohir.updateRate
+        repeat: true
+        running: appActive && pageActive && (!pdm.active) && (!saveTimer.running)
+        triggeredOnStart: true
+        onTriggered: {
+            tohir.startScan()
         }
     }
 
-    Timer
-    {
+    Timer {
         id: thermistorReader
         interval: 1000
         repeat: true
-        running: applicationActive && page.status === PageStatus.Active
+        running: appActive && pageActive
         onTriggered:
         {
             tohir.readThermistor()

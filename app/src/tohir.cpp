@@ -11,17 +11,10 @@
 TohIR::TohIR(QObject *parent) : QAbstractListModel(parent)
   ,m_rawTemperatures(64, 0.0)
 {
-
-    // Create seed for the random
-    // That is needed only once on application startup
-    QTime time = QTime::currentTime();
-    qsrand((uint)time.msec());
-
     m_min = 100.0;
     m_max = -20.0;
     m_avg = 0.0;
     m_thermistor = -273.0;
-    m_hotSpot = 31;
 
     readSettings();
 
@@ -39,7 +32,7 @@ void TohIR::readSettings()
     s.beginGroup("View");
     writeGradientOpacity(s.value("gradientOpacity", "0.5").toReal());
     writeUpdateRate(s.value("updateRate", 500).toInt());
-    writeGranularity(s.value("granularity", "2.0").toReal());
+    writeGranularity(s.value("granularity", "0.5").toReal());
     writeContrast(s.value("contrast", 1.0).toReal());
     s.endGroup();
 }
@@ -90,9 +83,9 @@ QVariant TohIR::data(const QModelIndex &index, int role) const
 QHash<int, QByteArray> TohIR::roleNames() const
 {
     QHash<int, QByteArray> roleNames;
-    roleNames[TemperatureRole] = "temperature";
-    roleNames[ColorRole] = "color";
-    roleNames[HotSpotRole] = "hotspot";
+    roleNames[TemperatureRole] = "temperatureRole";
+    roleNames[ColorRole] = "colorRole";
+    roleNames[HotSpotRole] = "hotspotRole";
     return roleNames;
 }
 
@@ -180,7 +173,7 @@ void TohIR::startScan()
 
     emit scanFinished();
 
-    emit dataChanged(index(0), index(rowCount(QModelIndex())-1));
+    emit dataChanged(index(0), index(63));
 }
 
 /* Return thermistor temperature */
@@ -217,16 +210,11 @@ qreal TohIR::thermistor() const
     return m_thermistor;
 }
 
-int TohIR::readHotSpot()
-{
-    return m_hotSpot;
-}
-
 /* Call dbus method to save screencapture */
 QString TohIR::saveScreenCapture()
 {
     QString ssFilename = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation)
-            + QDateTime::currentDateTime().toString("ddMMyy-hhmmss-zzz.png");
+            + QDateTime::currentDateTime().toString("/ddMMyy-hhmmss-zzz.png");
     QDBusMessage m = QDBusMessage::createMethodCall("org.nemomobile.lipstick",
                                                     "/org/nemomobile/lipstick/screenshot",
                                                     "",
