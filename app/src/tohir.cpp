@@ -10,6 +10,7 @@
 
 TohIR::TohIR(QObject *parent) : QAbstractListModel(parent)
   ,m_rawTemperatures(64, 0.0)
+  ,m_colorMap(new ColorMap())
 {
     m_min = 100.0;
     m_max = -20.0;
@@ -49,6 +50,11 @@ void TohIR::saveSettings()
     s.endGroup();
 }
 
+ColorMap *TohIR::colorMap() const
+{
+    return m_colorMap.data();
+}
+
 
 TohIR::~TohIR()
 {
@@ -67,11 +73,12 @@ QVariant TohIR::data(const QModelIndex &index, int role) const
         return QVariant();
 
     const qreal temperature = m_rawTemperatures.value(index.row());
+
     if(role == int(TemperatureRole)) {
         return QVariant::fromValue(temperature);
     }
     else if(role == int(ColorRole)) {
-        return QVariant::fromValue(temperatureColor(temperature, m_min, m_max, m_avg));
+        return QVariant::fromValue(m_colorMap->getColor(temperature));
     }
     else if(role == int(HotSpotRole)) {
         return QVariant::fromValue(qFuzzyCompare(temperature, m_max));
@@ -100,18 +107,17 @@ QString TohIR::readVersion() const
     return QString(APPVERSION);
 }
 
-/**/
 qreal TohIR::readGradientOpacity()
 {
     return m_gradientOpacity;
 }
 
-/**/
 void TohIR::writeGradientOpacity(qreal val)
 {
-    m_gradientOpacity = val;
+    if(qFuzzyCompare(m_gradientOpacity, val)) return;
 
-    emit gradientOpacityChanged();
+    m_gradientOpacity = val;
+    emit gradientOpacityChanged(val);
 }
 
 int TohIR::readUpdateRate()
@@ -121,9 +127,10 @@ int TohIR::readUpdateRate()
 
 void TohIR::writeUpdateRate(int val)
 {
+    if(m_updateRate == val) return;
     m_updateRate = val;
 
-    emit updateRateChanged();
+    emit updateRateChanged(val);
 }
 
 qreal TohIR::readGranularity()
@@ -133,9 +140,10 @@ qreal TohIR::readGranularity()
 
 void TohIR::writeGranularity(qreal val)
 {
+    if(qFuzzyCompare(m_granularity, val)) return;
     m_granularity = val;
 
-    emit granularityChanged();
+    emit granularityChanged(val);
 }
 
 qreal TohIR::readContrast()
@@ -145,9 +153,10 @@ qreal TohIR::readContrast()
 
 void TohIR::writeContrast(qreal val)
 {
+    if(qFuzzyCompare(m_contrast, val)) return;
     m_contrast = val;
 
-    emit contrastChanged();
+    emit contrastChanged(val);
 }
 
 
@@ -168,16 +177,9 @@ void TohIR::startScan()
         m_min = qMin(m_min, tmp);
         m_avg = m_avg + tmp;
     }
-
     m_avg = m_avg/64;
 
-    /* Get RGB values for each pixel */
-    m_temperatures.clear();
-    for(int i=0 ; i<64 ; i++)
-        m_temperatures.append(temperatureColor(m_rawTemperatures.at(i), m_min, m_max, m_avg));
-
     emit scanFinished();
-
     emit dataChanged(index(0), index(63));
 }
 
@@ -186,12 +188,6 @@ void TohIR::readThermistor()
 {
     m_thermistor = amg->getThermistor();
     emit thermistorChanged(m_thermistor);
-}
-
-/* Return temperature color gradients as array */
-QList<QString> TohIR::readTemperatures() const
-{
-    return m_temperatures;
 }
 
 /* Return minimum, average and maximum temperature of last scan */
@@ -235,49 +231,6 @@ QString TohIR::saveScreenCapture()
         return QString("Failed");
     }
 }
-
-
-QString TohIR::temperatureColor(qreal temp, qreal min, qreal max, qreal avg) const
-{
-    /* We have 61 different colors - for now */
-    static const QString lookup[61] =
-    {
-        "#0500ff", "#0400ff", "#0300ff", "#0200ff", "#0100ff", "#0000ff",
-        "#0002ff", "#0012ff", "#0022ff", "#0032ff", "#0044ff", "#0054ff",
-        "#0064ff", "#0074ff", "#0084ff", "#0094ff", "#00a4ff", "#00b4ff",
-        "#00c4ff", "#00d4ff", "#00e4ff", "#00fff4", "#00ffd0", "#00ffa8",
-        "#00ff83", "#00ff5c", "#00ff36", "#00ff10", "#17ff00", "#3eff00",
-        "#65ff00", "#8aff00", "#b0ff00", "#d7ff00", "#fdff00", "#FFfa00",
-        "#FFf000", "#FFe600", "#FFdc00", "#FFd200", "#FFc800", "#FFbe00",
-        "#FFb400", "#FFaa00", "#FFa000", "#FF9600", "#FF8c00", "#FF8200",
-        "#FF7800", "#FF6e00", "#FF6400", "#FF5a00", "#FF5000", "#FF4600",
-        "#FF3c00", "#FF3200", "#FF2800", "#FF1e00", "#FF1400", "#FF0a00",
-        "#FF0000"
-    };
-
-    /* If true span is low, tweak it to around avg */
-    if ((max - min) < 20.0)
-    {
-        max = ( ((avg + 10.0) > max) ? (avg + 10.0) : max );
-        min = ( ((avg - 10.0) < min) ? (avg - 10.0) : min );
-    }
-
-    /* Adjust low end to 0, to get only positive numbers */
-    qreal t = temp - min;
-
-    /* span is 2x max or min difference to average, which is larger */
-    qreal span = 2.0 * ((max - avg) > (avg - min) ? (max - avg) : (avg - min));
-
-    /* Scale to 60 points */
-    qreal x = (t * (60000.0/span))/1000.0;
-
-    /* just to prevent segfaults, return error color (white) */
-    if ( (x < 0.0) || (x > 60.0) )
-        return "#FFFFFF";
-
-    return lookup[static_cast<int>(x)]; /* Return corresponding RGB color */
-}
-
 
 void TohIR::controlVdd(bool state)
 {

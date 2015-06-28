@@ -11,8 +11,8 @@ Name:       harbour-ambience-tohiri
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 
 Summary:    The OtherHalf Thermal Imager
-Version:    0.5.2
-Release:    4
+Version:    0.6.0
+Release:    5
 Group:      Qt/Qt
 License:    LICENSE
 URL:        https://github.com/kimmoli/tohiri

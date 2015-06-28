@@ -1,7 +1,9 @@
 #ifndef TOHIR_H
 #define TOHIR_H
+
 #include <QtCore>
 #include "amg883x.h"
+#include "colormap.h"
 
 class TohIR : public QAbstractListModel
 {
@@ -16,7 +18,6 @@ public:
 
 private:
     Q_ENUMS(ItemDataRole)
-    Q_PROPERTY(QList<QString> temperatures READ readTemperatures NOTIFY scanFinished)
     Q_PROPERTY(QString version READ readVersion NOTIFY versionChanged)
     Q_PROPERTY(qreal minTemp READ readMinTemp NOTIFY scanFinished)
     Q_PROPERTY(qreal avgTemp READ readAvgTemp NOTIFY scanFinished)
@@ -27,6 +28,7 @@ private:
     Q_PROPERTY(int updateRate READ readUpdateRate WRITE writeUpdateRate NOTIFY updateRateChanged)
     Q_PROPERTY(qreal granularity READ readGranularity WRITE writeGranularity NOTIFY granularityChanged)
     Q_PROPERTY(qreal contrast READ readContrast WRITE writeContrast NOTIFY contrastChanged)
+    Q_PROPERTY(ColorMap* colorMap READ colorMap NOTIFY colorMapChanged)
 
 public:
     explicit TohIR(QObject *parent = 0);
@@ -37,7 +39,6 @@ public:
     QHash<int, QByteArray> roleNames() const;
     Q_INVOKABLE QVariant getData(int row, int role) const;
 
-    QList<QString> readTemperatures() const;
     Q_INVOKABLE void startScan();
     Q_INVOKABLE void readThermistor();
     Q_INVOKABLE QString saveScreenCapture();
@@ -63,23 +64,24 @@ public:
     Q_INVOKABLE void readSettings();
     Q_INVOKABLE void saveSettings();
 
+    ColorMap *colorMap() const;
+
 signals:
     void scanFinished();
     void thermistorChanged(qreal);
     void versionChanged();
 
-    void gradientOpacityChanged();
-    void updateRateChanged();
-    void granularityChanged();
-    void contrastChanged();
+    void gradientOpacityChanged(qreal);
+    void updateRateChanged(int);
+    void granularityChanged(qreal);
+    void contrastChanged(qreal);
+
+    void colorMapChanged(QObject* arg);
 
 private:
     void controlVdd(bool state);
 
-    QString temperatureColor(qreal temp, qreal min, qreal max, qreal avg) const;
-
     QVector<qreal> m_rawTemperatures;
-    QList<QString> m_temperatures;
 
     qreal m_avg;
     qreal m_min;
@@ -92,6 +94,7 @@ private:
     qreal m_contrast;
 
     amg883x* amg;
+    QScopedPointer<ColorMap> m_colorMap;
 };
 
 

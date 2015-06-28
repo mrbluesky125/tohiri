@@ -68,6 +68,7 @@ Dialog
             value: contrast
             stepSize: 0.1
             valueText: value.toFixed(1)
+            visible: false //no function atm
         }
 
         Slider

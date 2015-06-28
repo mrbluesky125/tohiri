@@ -4,20 +4,19 @@
 #endif
 
 #include <sailfishapp.h>
+#include <QtCore>
 #include <QtQml>
-#include <QScopedPointer>
+#include <QtQuick>
 #include <QQuickView>
-#include <QQmlEngine>
 #include <QGuiApplication>
-#include <QQmlContext>
-#include <QCoreApplication>
 
 #include "tohir.h"
-
+#include "colormap.h"
 
 int main(int argc, char *argv[])
 {
     qmlRegisterType<TohIR>("harbour.tohiri.TohIR", 1, 0, "TohIR");
+    qmlRegisterType<ColorMap>("harbour.tohiri.TohIR", 1, 0, "ColorMap");
 
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QScopedPointer<QQuickView> view(SailfishApp::createView());

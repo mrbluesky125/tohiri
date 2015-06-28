@@ -3,6 +3,7 @@ import Sailfish.Silica 1.0
 import harbour.tohiri.TohIR 1.0
 import QtMultimedia 5.0
 import QtGraphicalEffects 1.0
+
 import "."
 
 Page
@@ -91,8 +92,6 @@ Page
             title: "TOH Infrared Imager"
         }
 
-
-
         VideoOutput
         {
             id: videoPreview
@@ -102,6 +101,7 @@ Page
             anchors.verticalCenterOffset: -60
         }
 
+        //Used for colors and shader effects
         Grid {
             id: irView
 
@@ -123,19 +123,19 @@ Page
                     color: colorRole
 
                     //smooth animation between colors - possibly causing higher cpu load
-                    Behavior on color { ColorAnimation { duration: tohir.updateRate*0.75 } }
+                    Behavior on color { ColorAnimation { duration: tohir.updateRate } }
                 }
             }
 
             layer.enabled: true
             layer.effect: GaussianBlur {
-                cached: true
                 source: irView
                 radius: Math.min(irView.tileHeight, irView.tileWidth)*tohir.granularity
-                samples: 32
+                samples: 16
             }
         }
 
+        //Used for additional information - no shader effects
         Grid {
             id: irOverlay
 
@@ -156,6 +156,15 @@ Page
                     height: irView.tileHeight
                     width: irView.tileWidth
 
+                    Rectangle {
+                        id: hotSpotMarker
+                        anchors.centerIn: parent
+                        height: Math.min(parent.height/6, parent.width/6)
+                        width: Math.min(parent.height/6, parent.width/6)
+                        rotation: 45
+                        visible: hotspotRole
+                    }
+
                     Label {
                         anchors.centerIn: parent
                         color: Theme.secondaryColor
@@ -175,15 +184,17 @@ Page
             }
         }
 
-        Rectangle
+        ColorBar
         {
             id: mamBackground
-            z: 2
-            color: Theme.secondaryHighlightColor
             width: 480
             height: mamLabels.height + mamValues.height + 10
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: irView.bottom
+
+            colorMap: tohir.colorMap
+            minValue: tohir.minTemp
+            maxValue: tohir.maxTemp
 
             Row
             {
@@ -251,6 +262,39 @@ Page
             }
         }
 
+        Row {
+            width: parent.width
+            anchors.top: mamBackground.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            Slider
+            {
+                id: windowSlider
+                width: parent.width/2
+                label: "Window"
+                anchors.verticalCenter: parent.verticalCenter
+                minimumValue: 10.0
+                maximumValue: 120.0
+                value: 40
+                stepSize: 1
+                valueText: value
+                //visible: false //deactivated for now
+            }
+
+            Slider
+            {
+                id: levelSlider
+                width: parent.width/2
+                label: "Level"
+                anchors.verticalCenter: parent.verticalCenter
+                minimumValue: -30.0
+                maximumValue: 100.0
+                value: 20
+                stepSize: 1
+                valueText: value
+                //visible: false //deactivated for now
+            }
+        }
+
         Timer
         {
             id: saveTimer
@@ -284,7 +328,10 @@ Page
 
     TohIR {
         id: tohir
+        colorMap.window: windowSlider.value
+        colorMap.level: levelSlider.value
 
+        Behavior on colorMap.level { NumberAnimation { duration: 1000 } }
     }
 
     Timer {
