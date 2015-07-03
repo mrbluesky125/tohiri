@@ -79,7 +79,7 @@ QString ColorMap::getColor(qreal value)
     const qreal m = COLOR_STEPS / window();
     const qreal offset = (level() - (window()/2.));
     int index = qRound( (value - offset) * m );
-    index = qBound(0, index, COLOR_STEPS);
+    index = qBound(0, index, COLOR_STEPS-1);
     return m_lookupTable.value(index, "transparent");
 }
 
