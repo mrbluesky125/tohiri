@@ -1,11 +1,10 @@
 #include "tohir.h"
-#include <QSettings>
-#include <QCoreApplication>
-#include <QTime>
-#include <QtDBus/QtDBus>
-#include <QDBusArgument>
+
+#include <QtCore>
+#include <QtDBus>
 
 #include "amg883x.h"
+#include <unistd.h>
 
 
 TohIR::TohIR(QObject *parent) : QAbstractListModel(parent)

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "driverBase.h"
+#include "unistd.h"
 
 int DriverBase::openDeviceFile(const char* name)
 {

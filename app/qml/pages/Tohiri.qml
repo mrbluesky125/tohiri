@@ -35,6 +35,7 @@ Page
     SilicaFlickable
     {
         anchors.fill: parent
+        contentHeight: contentColumn.height
 
         PullDownMenu {
             id: pdm
@@ -78,260 +79,288 @@ Page
         {
             id: camera
             flash.mode: Camera.FlashOff
-            captureMode: Camera.CaptureStillImage
+            captureMode: Camera.CaptureViewfinder
             focus.focusMode: Camera.FocusContinuous
+            exposure.exposureMode: Camera.ExposurePortrait
             onError: {
                 console.error("error: " + camera.errorString);
             }
         }
 
-        PageHeader
-        {
-            anchors.top: parent.top
-            id: cameraHeader
-            title: "TOH Infrared Imager"
-        }
+        Column {
+            id: contentColumn
+            spacing: 18
+            width: parent.width
 
-        VideoOutput
-        {
-            id: videoPreview
-            source: camera
-            width: 480
-            anchors.centerIn: parent
-            anchors.verticalCenterOffset: -60
-        }
+            PageHeader
+            {
+                id: cameraHeader
+                title: "TOH Infrared Imager"
+            }
 
-        //Used for colors and shader effects
-        Grid {
-            id: irView
+            VideoOutput
+            {
+                id: videoPreview
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: camera
+                height: width*(4./3.)
+                width: 480
 
-            anchors.fill: videoPreview
-            height: 640
-            width: 480
-            columns: 8
-            rows: 8
-            opacity: tohir.gradientOpacity
+                //Used for colors and shader effects
+                Grid {
+                    id: irView
 
-            property int tileHeight: irView.height/irView.rows
-            property int tileWidth: irView.width/irView.columns
+                    anchors.centerIn: videoPreview
+                    height: videoPreview.height
+                    width: videoPreview.width
+                    columns: 8
+                    rows: 8
+                    opacity: tohir.gradientOpacity
 
-            Repeater {
-                model: tohir
-                delegate: Rectangle {
-                    height: irView.tileHeight
-                    width: irView.tileWidth
-                    color: colorRole
+                    property int tileHeight: irView.height/irView.rows
+                    property int tileWidth: irView.width/irView.columns
 
-                    //smooth animation between colors - possibly causing higher cpu load
-                    Behavior on color { ColorAnimation { duration: tohir.updateRate } }
+                    Repeater {
+                        model: tohir
+                        delegate: Rectangle {
+                            height: irView.tileHeight
+                            width: irView.tileWidth
+                            color: colorRole
+
+                            //smooth animation between colors - possibly causing higher cpu load
+                            Behavior on color { ColorAnimation { duration: tohir.updateRate } }
+                        }
+                    }
+
+                    layer.enabled: true
+                    layer.effect: GaussianBlur {
+                        source: irView
+                        radius: Math.min(irView.tileHeight, irView.tileWidth)*tohir.granularity
+                        samples: 16
+                    }
+                }
+
+                //Used for additional information - no shader effects
+                Grid {
+                    id: irOverlay
+
+                    anchors.fill: videoPreview
+                    columns: 8
+                    rows: 8
+                    opacity: tohir.gradientOpacity
+
+                    property int tileHeight: irView.height/irView.rows
+                    property int tileWidth: irView.width/irView.columns
+                    property int selectedTile: -1
+
+                    Repeater {
+                        model: tohir
+                        delegate: Item {
+                            height: irView.tileHeight
+                            width: irView.tileWidth
+
+                            Rectangle {
+                                id: hotSpotMarker
+                                anchors.centerIn: parent
+                                height: Math.min(parent.height/6, parent.width/6)
+                                width: Math.min(parent.height/6, parent.width/6)
+                                rotation: 45
+                                visible: hotspotRole
+                            }
+
+                            Label {
+                                anchors.centerIn: parent
+                                color: Theme.secondaryColor
+                                font.pixelSize: Theme.fontSizeSmall
+                                horizontalAlignment: Text.AlignHCenter
+                                visible: irOverlay.selectedTile === index
+                                text: temperatureRole.toFixed(1) + " ºC"
+                                style: Text.Outline
+                                styleColor: "black"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: irOverlay.selectedTile = index
+                            }
+                        }
+                    }
                 }
             }
 
-            layer.enabled: true
-            layer.effect: GaussianBlur {
-                source: irView
-                radius: Math.min(irView.tileHeight, irView.tileWidth)*tohir.granularity
-                samples: 16
-            }
-        }
+            ColorBar
+            {
+                id: mamBackground
+                width: 480
+                height: mamLabels.height + mamValues.height + 10
+                anchors.horizontalCenter: parent.horizontalCenter
 
-        //Used for additional information - no shader effects
-        Grid {
-            id: irOverlay
+                colorMap: tohir.colorMap
+                minValue: tohir.minTemp
+                maxValue: tohir.maxTemp
 
-            anchors.fill: videoPreview
-            height: 640
-            width: 480
-            columns: 8
-            rows: 8
-            opacity: tohir.gradientOpacity
+                Connections { target: tohir; onMinTempChanged: mamBackground.requestUpdate() }
+                Connections { target: tohir; onMaxTempChanged: mamBackground.requestUpdate() }
 
-            property int tileHeight: irView.height/irView.rows
-            property int tileWidth: irView.width/irView.columns
-            property int selectedTile: -1
+                Row
+                {
+                    id: mamLabels
+                    z: 3
+                    x: Theme.paddingLarge
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: mamBackground.top
 
-            Repeater {
-                model: tohir
-                delegate: Item {
-                    height: irView.tileHeight
-                    width: irView.tileWidth
-
-                    Rectangle {
-                        id: hotSpotMarker
-                        anchors.centerIn: parent
-                        height: Math.min(parent.height/6, parent.width/6)
-                        width: Math.min(parent.height/6, parent.width/6)
-                        rotation: 45
-                        visible: hotspotRole
-                    }
-
-                    Label {
-                        anchors.centerIn: parent
+                    Label
+                    {
+                        width: page.width/3
+                        text: "min"
                         color: Theme.secondaryColor
                         font.pixelSize: Theme.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
-                        visible: irOverlay.selectedTile === index
-                        text: temperatureRole.toFixed(1) + " ºC"
                         style: Text.Outline
-                        styleColor: "black"
                     }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: irOverlay.selectedTile = index
+                    Label
+                    {
+                        width: page.width/3
+                        text: "avg"
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        style: Text.Outline
+                    }
+                    Label
+                    {
+                        width: page.width/3
+                        text: "max"
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        style: Text.Outline
+                    }
+                }
+                Row
+                {
+                    id: mamValues
+                    z: 3
+                    anchors.top: mamLabels.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    Label
+                    {
+                        width: page.width/3
+                        text: tohir.minTemp.toFixed(1) + " ºC"
+                        color: Theme.primaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        style: Text.Outline
+                    }
+                    Label
+                    {
+                        width: page.width/3
+                        text: tohir.avgTemp.toFixed(1) + " ºC"
+                        color: Theme.primaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        style: Text.Outline
+                    }
+                    Label
+                    {
+                        width: page.width/3
+                        text: tohir.maxTemp.toFixed(1) + " ºC"
+                        color: Theme.primaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        style: Text.Outline
                     }
                 }
             }
-        }
 
-        ColorBar
-        {
-            id: mamBackground
-            width: 480
-            height: mamLabels.height + mamValues.height + 10
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: irView.bottom
+//            ColorBar {
+//                id: levelWindowBackground
+//                width: 480
+//                height: mamBackground.height
+//                anchors.horizontalCenter: parent.horizontalCenter
 
-            colorMap: tohir.colorMap
-            minValue: tohir.minTemp
-            maxValue: tohir.maxTemp
+//                colorMap: tohir.colorMap //ColorMap { window: 120; level: 40 }
+//                minValue: -20
+//                maxValue: 100
+
+//                LevelWindowControl
+//                {
+//                    id: levelWindowControl
+//                    anchors.fill: parent
+//                    minValue: -20.0
+//                    maxValue: 100.0
+
+//                    level: 30
+//                    window: 30
+//                }
+//            }
 
             Row
             {
-                id: mamLabels
-                z: 3
-                x: Theme.paddingLarge
+                id: thermistorDateRow
+                spacing: Theme.paddingLarge
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: mamBackground.top
 
                 Label
                 {
-                    width: page.width/3
-                    text: "min"
-                    color: Theme.secondaryColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    horizontalAlignment: Text.AlignHCenter
+                    id: thermistorTemperature
+                    text: (tohir.thermistor < -200) ? "---" : tohir.thermistor.toFixed(1) + " ºC"
                 }
                 Label
                 {
-                    width: page.width/3
-                    text: "avg"
-                    color: Theme.secondaryColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    horizontalAlignment: Text.AlignHCenter
+                    id: currentDateTime
+                    text: "---"
                 }
-                Label
-                {
-                    width: page.width/3
-                    text: "max"
-                    color: Theme.secondaryColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    horizontalAlignment: Text.AlignHCenter
-                }
-            }
-            Row
-            {
-                id: mamValues
-                z: 3
-                anchors.top: mamLabels.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                Label
-                {
-                    width: page.width/3
-                    text: tohir.minTemp.toFixed(1) + " ºC"
-                    color: Theme.primaryColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    horizontalAlignment: Text.AlignHCenter
-                }
-                Label
-                {
-                    width: page.width/3
-                    text: tohir.avgTemp.toFixed(1) + " ºC"
-                    color: Theme.primaryColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    horizontalAlignment: Text.AlignHCenter
-                }
-                Label
-                {
-                    width: page.width/3
-                    text: tohir.maxTemp.toFixed(1) + " ºC"
-                    color: Theme.primaryColor
-                    font.pixelSize: Theme.fontSizeSmall
-                    horizontalAlignment: Text.AlignHCenter
-                }
-            }
-        }
-
-        Row {
-            width: parent.width
-            anchors.top: mamBackground.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            Slider
-            {
-                id: windowSlider
-                width: parent.width/2
-                label: "Window"
-                anchors.verticalCenter: parent.verticalCenter
-                minimumValue: 10.0
-                maximumValue: 120.0
-                value: 40
-                stepSize: 1
-                valueText: value
-                //visible: false //deactivated for now
             }
 
             Slider
             {
                 id: levelSlider
-                width: parent.width/2
+                width: 480
                 label: "Level"
-                anchors.verticalCenter: parent.verticalCenter
-                minimumValue: -30.0
+                anchors.horizontalCenter: parent.Center
+                minimumValue: -20.0
                 maximumValue: 100.0
-                value: 20
-                stepSize: 1
-                valueText: value
-                //visible: false //deactivated for now
+                value: 30
+                stepSize: 1.0
+                valueText: value.toFixed(0)
             }
-        }
 
-        Timer
-        {
-            id: saveTimer
-            interval: 500
-            repeat: false
-            running: false
-            onTriggered: {
-                messagebox.showMessage("Image saved: " + tohir.saveScreenCapture(), 4000)
-            }
-        }
-
-        Row
-        {
-            id: thermistorDateRow
-            spacing: Theme.paddingLarge
-            anchors.top: mamBackground.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            Label
+            Slider
             {
-                id: thermistorTemperature
-                text: (tohir.thermistor < -200) ? "---" : tohir.thermistor.toFixed(1) + " ºC"
-            }
-            Label
-            {
-                id: currentDateTime
-                text: "---"
+                id: windowSlider
+                width: 480
+                label: "Window"
+                anchors.horizontalCenter: parent.Center
+                minimumValue: 10.0
+                maximumValue: 120.0
+                value: 30
+                stepSize: 1.0
+                valueText: value.toFixed(0)
             }
         }
     }
 
     TohIR {
         id: tohir
+//        colorMap.window: levelWindowControl.window
+//        colorMap.level: levelWindowControl.level
         colorMap.window: windowSlider.value
         colorMap.level: levelSlider.value
 
         Behavior on colorMap.level { NumberAnimation { duration: 1000 } }
+    }
+
+    Timer
+    {
+        id: saveTimer
+        interval: 500
+        repeat: false
+        running: false
+        onTriggered: {
+            messagebox.showMessage("Image saved: " + tohir.saveScreenCapture(), 4000)
+        }
     }
 
     Timer {
@@ -350,8 +379,7 @@ Page
         interval: 1000
         repeat: true
         running: appActive && pageActive
-        onTriggered:
-        {
+        onTriggered: {
             tohir.readThermistor()
             currentDateTime.text = Qt.formatDateTime(new Date(), "hh:mm:ss - dd.MM.yyyy")
         }

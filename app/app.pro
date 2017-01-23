@@ -28,5 +28,6 @@ OTHER_FILES += qml/tohiri.qml \
     harbour-tohiri.desktop \
     harbour-tohiri.png \
     qml/pages/Messagebox.qml \
-    qml/pages/ColorBar.qml
+    qml/pages/ColorBar.qml \
+    qml/pages/LevelWindowControl.qml
 

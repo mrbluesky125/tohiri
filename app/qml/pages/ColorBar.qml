@@ -14,6 +14,8 @@ Item {
     property real minValue: -20
     property real maxValue: 100
 
+    function requestUpdate() { canvas.requestPaint(); }
+
     Connections { target: colorMap; onColorStopsChanged: canvas.requestPaint() }
     Connections { target: colorMap; onLevelChanged: canvas.requestPaint() }
     Connections { target: colorMap; onWindowChanged: canvas.requestPaint() }
